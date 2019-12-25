@@ -13,11 +13,18 @@ use errors::IndyCryptoError;
 ///
 /// # Result
 /// Return the pedersen commitment, i.e `(gen_1^m)*(gen_2^r)`
-pub fn get_pedersen_commitment(gen_1: &BigNumber, m: &BigNumber,
-                               gen_2: &BigNumber, r: &BigNumber,
-                               modulus: &BigNumber, ctx: &mut BigNumberContext) -> Result<BigNumber, IndyCryptoError> {
-    let commitment = gen_1.mod_exp(m, modulus, Some(ctx))?
-        .mod_mul(&gen_2.mod_exp(r, modulus, Some(ctx))?,
-                 modulus, Some(ctx))?;
+pub fn get_pedersen_commitment(
+    gen_1: &BigNumber,
+    m: &BigNumber,
+    gen_2: &BigNumber,
+    r: &BigNumber,
+    modulus: &BigNumber,
+    ctx: &mut BigNumberContext,
+) -> Result<BigNumber, IndyCryptoError> {
+    let commitment = gen_1.mod_exp(m, modulus, Some(ctx))?.mod_mul(
+        &gen_2.mod_exp(r, modulus, Some(ctx))?,
+        modulus,
+        Some(ctx),
+    )?;
     Ok(commitment)
 }

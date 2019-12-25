@@ -313,7 +313,7 @@ pub struct CredentialPrivateKey {
 }
 
 /// Issuer's "Public Key" is used to verify the Issuer's signature over the Credential's attributes' values (primary credential).
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize)]
 pub struct CredentialPrimaryPublicKey {
     n: BigNumber,
     s: BigNumber,
@@ -334,32 +334,32 @@ impl CredentialPrimaryPublicKey {
     }
 }
 
-impl<'a> ::serde::de::Deserialize<'a> for CredentialPrimaryPublicKey {
-    fn deserialize<D: ::serde::de::Deserializer<'a>>(deserializer: D) -> Result<Self, D::Error> {
-        #[derive(Deserialize)]
-        struct CredentialPrimaryPublicKeyV1 {
-            n: BigNumber,
-            s: BigNumber,
-            r: HashMap<String /* attr_name */, BigNumber>,
-            rctxt: BigNumber,
-            #[serde(default)]
-            rms: BigNumber,
-            z: BigNumber,
-        }
-
-        let mut helper = CredentialPrimaryPublicKeyV1::deserialize(deserializer)?;
-        if helper.rms != BigNumber::default() {
-            helper.r.insert("master_secret".to_string(), helper.rms);
-        }
-        Ok(CredentialPrimaryPublicKey {
-            n: helper.n,
-            s: helper.s,
-            rctxt: helper.rctxt,
-            z: helper.z,
-            r: helper.r,
-        })
-    }
-}
+//impl<'a> ::serde::de::Deserialize<'a> for CredentialPrimaryPublicKey {
+//    fn deserialize<D: ::serde::de::Deserializer<'a>>(deserializer: D) -> Result<Self, D::Error> {
+//        #[derive(Deserialize)]
+//        struct CredentialPrimaryPublicKeyV1 {
+//            n: BigNumber,
+//            s: BigNumber,
+//            r: HashMap<String /* attr_name */, BigNumber>,
+//            rctxt: BigNumber,
+//            #[serde(default)]
+//            rms: BigNumber,
+//            z: BigNumber,
+//        }
+//
+//        let mut helper = CredentialPrimaryPublicKeyV1::deserialize(deserializer)?;
+//        if helper.rms != BigNumber::default() {
+//            helper.r.insert("master_secret".to_string(), helper.rms);
+//        }
+//        Ok(CredentialPrimaryPublicKey {
+//            n: helper.n,
+//            s: helper.s,
+//            rctxt: helper.rctxt,
+//            z: helper.z,
+//            r: helper.r,
+//        })
+//    }
+//}
 
 /// Issuer's "Private Key" used for signing Credential's attributes' values (primary credential)
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
@@ -935,7 +935,7 @@ pub struct PrimaryProof {
     ne_proofs: Vec<PrimaryPredicateInequalityProof>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PrimaryEqualProof {
     revealed_attrs: BTreeMap<String /* attr_name of revealed */, BigNumber>,
     a_prime: BigNumber,
@@ -945,34 +945,34 @@ pub struct PrimaryEqualProof {
     m2: BigNumber,
 }
 
-impl<'a> ::serde::de::Deserialize<'a> for PrimaryEqualProof {
-    fn deserialize<D: ::serde::de::Deserializer<'a>>(deserializer: D) -> Result<Self, D::Error> {
-        #[derive(Deserialize)]
-        struct PrimaryEqualProofV1 {
-            revealed_attrs: BTreeMap<String /* attr_name of revealed */, BigNumber>,
-            a_prime: BigNumber,
-            e: BigNumber,
-            v: BigNumber,
-            m: HashMap<String /* attr_name of all except revealed */, BigNumber>,
-            #[serde(default)]
-            m1: BigNumber,
-            m2: BigNumber,
-        }
-
-        let mut helper = PrimaryEqualProofV1::deserialize(deserializer)?;
-        if helper.m1 != BigNumber::default() {
-            helper.m.insert("master_secret".to_string(), helper.m1);
-        }
-        Ok(PrimaryEqualProof {
-            revealed_attrs: helper.revealed_attrs,
-            a_prime: helper.a_prime,
-            e: helper.e,
-            v: helper.v,
-            m: helper.m,
-            m2: helper.m2,
-        })
-    }
-}
+//impl<'a> ::serde::de::Deserialize<'a> for PrimaryEqualProof {
+//    fn deserialize<D: ::serde::de::Deserializer<'a>>(deserializer: D) -> Result<Self, D::Error> {
+//        #[derive(Deserialize)]
+//        struct PrimaryEqualProofV1 {
+//            revealed_attrs: BTreeMap<String /* attr_name of revealed */, BigNumber>,
+//            a_prime: BigNumber,
+//            e: BigNumber,
+//            v: BigNumber,
+//            m: HashMap<String /* attr_name of all except revealed */, BigNumber>,
+//            #[serde(default)]
+//            m1: BigNumber,
+//            m2: BigNumber,
+//        }
+//
+//        let mut helper = PrimaryEqualProofV1::deserialize(deserializer)?;
+//        if helper.m1 != BigNumber::default() {
+//            helper.m.insert("master_secret".to_string(), helper.m1);
+//        }
+//        Ok(PrimaryEqualProof {
+//            revealed_attrs: helper.revealed_attrs,
+//            a_prime: helper.a_prime,
+//            e: helper.e,
+//            v: helper.v,
+//            m: helper.m,
+//            m2: helper.m2,
+//        })
+//    }
+//}
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PrimaryPredicateInequalityProof {
@@ -1550,6 +1550,8 @@ mod test {
         assert_eq!(two, one);
     }
 
+    extern crate bincode;
+
     #[test]
     fn demo() {
         let mut credential_schema_builder = Issuer::new_credential_schema_builder().unwrap();
@@ -1568,6 +1570,7 @@ mod test {
         let (cred_pub_key, cred_priv_key, cred_key_correctness_proof) =
             Issuer::new_credential_def(&credential_schema, &non_credential_schema, true).unwrap();
 
+        let encoded1 = bincode::serialize(&cred_pub_key).unwrap();
         let master_secret = Prover::new_master_secret().unwrap();
         let credential_nonce = new_nonce().unwrap();
 
@@ -1591,7 +1594,7 @@ mod test {
             .add_dec_known("height", "175")
             .unwrap();
         let cred_values = credential_values_builder.finalize().unwrap();
-
+        let cred_pub_key: CredentialPublicKey = bincode::deserialize(&encoded1[..]).unwrap();
         let (
             blinded_credential_secrets,
             credential_secrets_blinding_factors,
