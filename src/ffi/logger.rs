@@ -1,15 +1,15 @@
 extern crate libc;
 
-use self::libc::{c_void, c_char};
+use self::libc::{c_char, c_void};
 
 use errors::ErrorCode;
 
-extern crate time;
 extern crate log;
+extern crate time;
 
 use errors::ToErrorCode;
 
-use cl::logger::{EnabledCB, LogCB, FlushCB, IndyCryptoLogger, IndyCryptoDefaultLogger};
+use cl::logger::{EnabledCB, FlushCB, IndyCryptoDefaultLogger, IndyCryptoLogger, LogCB};
 use ffi::ctypes::CTypesUtils;
 
 /// Set custom logger implementation.
@@ -25,17 +25,25 @@ use ffi::ctypes::CTypesUtils;
 /// #Returns
 /// Error code
 #[no_mangle]
-pub extern fn indy_crypto_set_logger(context: *const c_void,
-                                     enabled: Option<EnabledCB>,
-                                     log: Option<LogCB>,
-                                     flush: Option<FlushCB>) -> ErrorCode {
-    trace!("indy_crypto_set_logger >>> context: {:?}, enabled: {:?}, log: {:?}, flush: {:?}", context, log, enabled, flush);
+pub extern "C" fn indy_crypto_set_logger(
+    context: *const c_void,
+    enabled: Option<EnabledCB>,
+    log: Option<LogCB>,
+    flush: Option<FlushCB>,
+) -> ErrorCode {
+    trace!(
+        "indy_crypto_set_logger >>> context: {:?}, enabled: {:?}, log: {:?}, flush: {:?}",
+        context,
+        log,
+        enabled,
+        flush
+    );
 
     check_useful_c_callback!(log, ErrorCode::CommonInvalidParam3);
 
     let res = match IndyCryptoLogger::init(context, enabled, log, flush) {
         Ok(()) => ErrorCode::Success,
-        Err(err) => err.to_error_code()
+        Err(err) => err.to_error_code(),
     };
 
     trace!("indy_crypto_set_logger: <<< res: {:?}", res);
@@ -56,16 +64,19 @@ pub extern fn indy_crypto_set_logger(context: *const c_void,
 /// #Returns
 /// Error code
 #[no_mangle]
-pub extern fn indy_crypto_set_default_logger(pattern: *const c_char) -> ErrorCode {
+pub extern "C" fn indy_crypto_set_default_logger(pattern: *const c_char) -> ErrorCode {
     trace!("indy_crypto_set_default_logger >>> pattern: {:?}", pattern);
 
     check_useful_opt_c_str!(pattern, ErrorCode::CommonInvalidParam1);
 
-    trace!("indy_crypto_set_default_logger: entities >>> pattern: {:?}", pattern);
+    trace!(
+        "indy_crypto_set_default_logger: entities >>> pattern: {:?}",
+        pattern
+    );
 
     let res = match IndyCryptoDefaultLogger::init(pattern) {
         Ok(()) => ErrorCode::Success,
-        Err(err) => err.to_error_code()
+        Err(err) => err.to_error_code(),
     };
 
     trace!("indy_crypto_set_default_logger: <<< res: {:?}", res);

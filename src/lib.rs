@@ -1,7 +1,7 @@
 #[cfg(feature = "wasm")]
-extern crate wasm_bindgen;
-#[cfg(feature = "wasm")]
 extern crate console_error_panic_hook;
+#[cfg(feature = "wasm")]
+extern crate wasm_bindgen;
 
 #[cfg(feature = "pair_amcl")]
 extern crate amcl;

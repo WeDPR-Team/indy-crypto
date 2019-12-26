@@ -1,32 +1,33 @@
 extern crate env_logger;
-extern crate log;
 extern crate libc;
+extern crate log;
 
 use self::env_logger::Builder;
 use self::log::LevelFilter;
+use log::{Metadata, Record};
 use std::env;
 use std::io::Write;
-use log::{Record, Metadata};
 
 use errors::IndyCryptoError;
 
-use self::libc::{c_void, c_char};
+use self::libc::{c_char, c_void};
 use std::ffi::CString;
 use std::ptr;
 
-pub type EnabledCB = extern fn(context: *const c_void,
-                               level: u32,
-                               target: *const c_char) -> bool;
+pub type EnabledCB =
+    extern "C" fn(context: *const c_void, level: u32, target: *const c_char) -> bool;
 
-pub type LogCB = extern fn(context: *const c_void,
-                           level: u32,
-                           target: *const c_char,
-                           message: *const c_char,
-                           module_path: *const c_char,
-                           file: *const c_char,
-                           line: u32);
+pub type LogCB = extern "C" fn(
+    context: *const c_void,
+    level: u32,
+    target: *const c_char,
+    message: *const c_char,
+    module_path: *const c_char,
+    file: *const c_char,
+    line: u32,
+);
 
-pub type FlushCB = extern fn(context: *const c_void);
+pub type FlushCB = extern "C" fn(context: *const c_void);
 
 pub struct IndyCryptoLogger {
     context: *const c_void,
@@ -36,8 +37,18 @@ pub struct IndyCryptoLogger {
 }
 
 impl IndyCryptoLogger {
-    fn new(context: *const c_void, enabled: Option<EnabledCB>, log: LogCB, flush: Option<FlushCB>) -> Self {
-        IndyCryptoLogger { context, enabled, log, flush }
+    fn new(
+        context: *const c_void,
+        enabled: Option<EnabledCB>,
+        log: LogCB,
+        flush: Option<FlushCB>,
+    ) -> Self {
+        IndyCryptoLogger {
+            context,
+            enabled,
+            log,
+            flush,
+        }
     }
 }
 
@@ -47,11 +58,10 @@ impl log::Log for IndyCryptoLogger {
             let level = metadata.level() as u32;
             let target = CString::new(metadata.target()).unwrap();
 
-            enabled_cb(self.context,
-                       level,
-                       target.as_ptr(),
-            )
-        } else { true }
+            enabled_cb(self.context, level, target.as_ptr())
+        } else {
+            true
+        }
     }
 
     fn log(&self, record: &Record) {
@@ -65,13 +75,17 @@ impl log::Log for IndyCryptoLogger {
         let file = record.file().map(|a| CString::new(a).unwrap());
         let line = record.line().unwrap_or(0);
 
-        log_cb(self.context,
-               level,
-               target.as_ptr(),
-               message.as_ptr(),
-               module_path.as_ref().map(|p| p.as_ptr()).unwrap_or(ptr::null()),
-               file.as_ref().map(|p| p.as_ptr()).unwrap_or(ptr::null()),
-               line,
+        log_cb(
+            self.context,
+            level,
+            target.as_ptr(),
+            message.as_ptr(),
+            module_path
+                .as_ref()
+                .map(|p| p.as_ptr())
+                .unwrap_or(ptr::null()),
+            file.as_ref().map(|p| p.as_ptr()).unwrap_or(ptr::null()),
+            line,
         )
     }
 
@@ -87,7 +101,12 @@ unsafe impl Sync for IndyCryptoLogger {}
 unsafe impl Send for IndyCryptoLogger {}
 
 impl IndyCryptoLogger {
-    pub fn init(context: *const c_void, enabled: Option<EnabledCB>, log: LogCB, flush: Option<FlushCB>) -> Result<(), IndyCryptoError> {
+    pub fn init(
+        context: *const c_void,
+        enabled: Option<EnabledCB>,
+        log: LogCB,
+        flush: Option<FlushCB>,
+    ) -> Result<(), IndyCryptoError> {
         let logger = IndyCryptoLogger::new(context, enabled, log, flush);
 
         log::set_boxed_logger(Box::new(logger))?;
@@ -104,7 +123,17 @@ impl IndyCryptoDefaultLogger {
         let pattern = pattern.or(env::var("RUST_LOG").ok());
 
         Builder::new()
-            .format(|buf, record| writeln!(buf, "{:>5}|{:<30}|{:>35}:{:<4}| {}", record.level(), record.target(), record.file().get_or_insert(""), record.line().get_or_insert(0), record.args()))
+            .format(|buf, record| {
+                writeln!(
+                    buf,
+                    "{:>5}|{:<30}|{:>35}:{:<4}| {}",
+                    record.level(),
+                    record.target(),
+                    record.file().get_or_insert(""),
+                    record.line().get_or_insert(0),
+                    record.args()
+                )
+            })
             .filter(None, LevelFilter::Off)
             .parse(pattern.as_ref().map(String::as_str).unwrap_or(""))
             .try_init()?;
@@ -116,11 +145,15 @@ impl IndyCryptoDefaultLogger {
 #[cfg(debug_assertions)]
 #[macro_export]
 macro_rules! secret {
-    ($val:expr) => {{ $val }};
+    ($val:expr) => {{
+        $val
+    }};
 }
 
 #[cfg(not(debug_assertions))]
 #[macro_export]
 macro_rules! secret {
-    ($val:expr) => {{ "_" }};
+    ($val:expr) => {{
+        "_"
+    }};
 }
