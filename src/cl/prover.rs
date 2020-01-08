@@ -1401,7 +1401,8 @@ impl ProofBuilder {
             )))?
             .value()
             .to_dec()?
-            .parse::<i32>()
+            // .parse::<i32>()
+            .parse::<u32>()
             .map_err(|_| {
                 IndyCryptoError::InvalidStructure(format!(
                     "Value by key '{}' has invalid format",

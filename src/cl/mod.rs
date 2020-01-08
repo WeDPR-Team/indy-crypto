@@ -817,7 +817,8 @@ impl SubProofRequestBuilder {
         &mut self,
         attr_name: &str,
         p_type: &str,
-        value: i32,
+        //        value: i32,
+        value: u32,
     ) -> Result<(), IndyCryptoError> {
         let p_type = match p_type {
             "GE" => PredicateType::GE,
@@ -852,11 +853,13 @@ impl SubProofRequestBuilder {
 pub struct Predicate {
     attr_name: String,
     p_type: PredicateType,
-    value: i32,
+    //    value: i32,
+    value: u32,
 }
 
 impl Predicate {
-    pub fn get_delta(&self, attr_value: i32) -> i32 {
+    //    pub fn get_delta(&self, attr_value: i32) -> i32 {
+    pub fn get_delta(&self, attr_value: u32) -> u32 {
         match self.p_type {
             PredicateType::GE => attr_value - self.value,
             PredicateType::GT => attr_value - self.value - 1,
@@ -1553,7 +1556,7 @@ mod test {
     extern crate bincode;
 
     #[test]
-    fn demo() {
+    fn demo_with_u32() {
         let mut credential_schema_builder = Issuer::new_credential_schema_builder().unwrap();
         credential_schema_builder.add_attr("name").unwrap();
         credential_schema_builder.add_attr("sex").unwrap();
