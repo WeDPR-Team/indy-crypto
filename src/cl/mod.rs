@@ -817,8 +817,7 @@ impl SubProofRequestBuilder {
         &mut self,
         attr_name: &str,
         p_type: &str,
-        //        value: i32,
-        value: u32,
+        value: u64,
     ) -> Result<(), IndyCryptoError> {
         let p_type = match p_type {
             "GE" => PredicateType::GE,
@@ -853,13 +852,11 @@ impl SubProofRequestBuilder {
 pub struct Predicate {
     attr_name: String,
     p_type: PredicateType,
-    //    value: i32,
-    value: u32,
+    value: u64,
 }
 
 impl Predicate {
-    //    pub fn get_delta(&self, attr_value: i32) -> i32 {
-    pub fn get_delta(&self, attr_value: u32) -> u32 {
+    pub fn get_delta(&self, attr_value: u64) -> u64 {
         match self.p_type {
             PredicateType::GE => attr_value - self.value,
             PredicateType::GT => attr_value - self.value - 1,
@@ -1556,12 +1553,13 @@ mod test {
     extern crate bincode;
 
     #[test]
-    fn demo_with_u32() {
+    fn demo_with_u64() {
         let mut credential_schema_builder = Issuer::new_credential_schema_builder().unwrap();
         credential_schema_builder.add_attr("name").unwrap();
         credential_schema_builder.add_attr("sex").unwrap();
         credential_schema_builder.add_attr("age").unwrap();
         credential_schema_builder.add_attr("height").unwrap();
+        credential_schema_builder.add_attr("timestamp").unwrap();
         let credential_schema = credential_schema_builder.finalize().unwrap();
 
         let mut non_credential_schema_builder = NonCredentialSchemaBuilder::new().unwrap();
@@ -1595,6 +1593,12 @@ mod test {
             .unwrap();
         credential_values_builder
             .add_dec_known("height", "175")
+            .unwrap();
+        // credential_values_builder
+        //     .add_dec_known("timestamp", "2147483647")
+        //     .unwrap();
+            credential_values_builder
+            .add_dec_known("timestamp", "18446744073709")
             .unwrap();
         let cred_values = credential_values_builder.finalize().unwrap();
         let cred_pub_key: CredentialPublicKey = bincode::deserialize(&encoded1[..]).unwrap();
@@ -1642,6 +1646,12 @@ mod test {
         sub_proof_request_builder
             .add_predicate("age", "GE", 18)
             .unwrap();
+            sub_proof_request_builder
+            .add_predicate("timestamp", "LT", 18446744073709551)
+            .unwrap();
+            // sub_proof_request_builder
+            // .add_predicate("timestamp", "GT", 18446744073709551)
+            // .unwrap();
         let sub_proof_request = sub_proof_request_builder.finalize().unwrap();
         let mut proof_builder = Prover::new_proof_builder().unwrap();
         proof_builder.add_common_attribute("master_secret").unwrap();
@@ -1805,7 +1815,7 @@ mod test {
             .unwrap();
         let proof_request_nonce = new_nonce().unwrap();
         let proof = proof_builder.finalize(&proof_request_nonce).unwrap();
-
+        println!("proof = {:?}", proof);
         let mut proof_verifier = Verifier::new_proof_verifier().unwrap();
         proof_verifier
             .add_sub_proof_request(
