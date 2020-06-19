@@ -184,7 +184,8 @@ pub fn blsVerifyMultiSig(
         .map(|x| {
             // TODO: Handle error case
             convert_from_js(x).unwrap()
-        }).collect();
+        })
+        .collect();
     let gen: bls::Generator = convert_from_js(generator)?;
     Ok(bls::Bls::verify_multi_sig(
         &ms,
