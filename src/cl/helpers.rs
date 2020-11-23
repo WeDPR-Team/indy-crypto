@@ -486,7 +486,7 @@ fn largest_square_less_than(delta: usize) -> usize {
 
 //Express the natural number `delta` as a sum of four integer squares,
 // i.e `delta = a^2 + b^2 + c^2 + d^2` using Lagrange's four-square theorem
-pub fn four_squares(delta: i32) -> Result<HashMap<String, BigNumber>, IndyCryptoError> {
+pub fn four_squares(delta: i64) -> Result<HashMap<String, BigNumber>, IndyCryptoError> {
     trace!("Helpers::four_squares: >>> delta: {:?}", delta);
 
     if delta < 0 {
@@ -712,7 +712,7 @@ mod tests {
 
     #[test]
     fn four_squares_works() {
-        let res = four_squares(107 as i32);
+        let res = four_squares(107 as i64);
         let res_data = res.unwrap();
 
         assert_eq!(
@@ -732,7 +732,7 @@ mod tests {
             res_data.get("3").unwrap().to_dec().unwrap()
         );
 
-        let res = four_squares(112 as i32);
+        let res = four_squares(112 as i64);
         let res_data = res.unwrap();
 
         assert_eq!(
@@ -752,7 +752,7 @@ mod tests {
             res_data.get("3").unwrap().to_dec().unwrap()
         );
 
-        let res = four_squares(253 as i32);
+        let res = four_squares(253 as i64);
         let res_data = res.unwrap();
 
         assert_eq!(
@@ -772,7 +772,7 @@ mod tests {
             res_data.get("3").unwrap().to_dec().unwrap()
         );
 
-        let res = four_squares(1506099439 as i32);
+        let res = four_squares(1506099439 as i64);
         let res_data = res.unwrap();
 
         assert_eq!(

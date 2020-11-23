@@ -762,12 +762,12 @@ mod tests {
         let s = Test {
             field: BigNumber::from_dec("1").unwrap(),
         };
-//        let serialized = bincode::serialize(&s);
+        //        let serialized = bincode::serialize(&s);
         let encoded1 = bincode::serialize(&s).unwrap();
         println!("encoded1 = {:?}", encoded1);
         let decoded1: BigNumber = bincode::deserialize(&encoded1[..]).unwrap();
         println!("decoded1 = {:?}", decoded1);
-//        assert_eq!("{\"field\":\"1\"}", serialized.unwrap());
+        //        assert_eq!("{\"field\":\"1\"}", serialized.unwrap());
     }
 
     #[cfg(feature = "serialization")]

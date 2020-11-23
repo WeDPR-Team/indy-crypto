@@ -1010,7 +1010,7 @@ impl Issuer {
             secret!(rev_idx)
         );
 
-        let rev_idx = rev_idx.map(|i| i as i32).unwrap_or(-1);
+        let rev_idx = rev_idx.map(|i| i as i64).unwrap_or(-1);
 
         let prover_id_bn = encode_attribute(prover_id, ByteOrder::Little)?;
         let rev_idx_bn = encode_attribute(&rev_idx.to_string(), ByteOrder::Little)?;
