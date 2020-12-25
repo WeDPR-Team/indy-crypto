@@ -1,5 +1,5 @@
 [package]
-name = "wedpr-indy-crypto"
+name = "indy-crypto"
 version = "0.4.5"
 authors = ["Artemkaaas <artem.ivanov@dsr-company.com>"]
 description = "This is the shared crypto library for Hyperledger Indy components."
